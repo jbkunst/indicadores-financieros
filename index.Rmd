@@ -1,0 +1,110 @@
+---
+title: "Indicadores Financieros"
+output: 
+  flexdashboard::flex_dashboard:
+    theme:
+      primary: "#0c1c32"
+      base_font:
+        google: Roboto
+    orientation: rows
+    vertical_layout: fill
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(highcharter)
+library(dplyr)
+library(bcchr)
+
+options(
+ bcc_api_user = 178956728,
+ bcc_api_pass = "cxynr4qyLLBw"
+)
+
+# dcatalogo <- bcchr::bcch_CatalogoSeries()
+
+get_chart <- function(timeseries = "F032.PIB.FLU.R.CLP.EP18.Z.Z.0.T",
+                      post_fun   = identity,
+                      # post_fun   = purrr::partial(bcchr::bcch_calculo_var_porc, tipo = "anio_anterior"),
+                      format     = NULL){
+  
+  data <- bcchr::bcch_GetSeries(timeseries)
+  
+  data <- post_fun(data)
+  
+  ts <- as.ts(data)
+  
+  name <- attr(data, "descripEsp")
+   
+  hc <- hchart(ts) |> 
+    hc_title(text = last(ts)) |> 
+    hc_subtitle(text = name)
+  
+  hc
+  
+}
+
+# Install thematic and un-comment for themed static plots (i.e., ggplot2)
+# thematic::thematic_rmd()
+```
+
+Row 
+-----------------------------------------------------------------------
+
+###
+
+```{r}
+# PIB
+# F032.PIB.FLU.R.CLP.EP18.Z.Z.0.T - PIB volumen a precios del año anterior encadenado
+# F032.PIB.FLU.R.CLP.EP18.Z.Z.1.T - PIB volumen a precios del año anterior encadenado (desestacionalizado)
+get_chart(
+  "F032.PIB.FLU.R.CLP.EP18.Z.Z.0.T", 
+  purrr::partial(bcchr::bcch_calculo_var_porc, tipo = "anio_anterior")
+  )
+```
+
+###
+
+```{r}
+# IPC
+# F074.IPC.VAR.Z.Z.C.M -	IPC General histórico, variación mensual
+# F074.IPC.IND.Z.EP09.C.M	 - IPC General, variación anual
+get_chart("F074.IPC.IND.Z.EP09.C.M")
+```
+
+###
+
+```{r}
+# desempleo
+# F049.DES.TAS.INE9.10.M	- Tasa  de  desempleo  (porcentaje)
+get_chart("F049.DES.TAS.INE9.10.M")
+```
+
+Row
+-----------------------------------------------------------------------
+
+###
+
+```{r}
+
+```
+
+###
+
+```{r}
+# TPM
+# F022.TPM.TIN.D001.NO.Z.D - Tasa de política monetaria (TPM) (porcentaje)
+get_chart("F022.TPM.TIN.D001.NO.Z.D")
+```
+
+###
+
+```{r}
+# Dolar
+# F073.TCO.PRE.Z.D - Tipo  de  cambio  nominal (dólar observado $/USD)        
+get_chart("F073.TCO.PRE.Z.D")
+```
+
+

@@ -1,1 +1,0 @@
-# indicadores-financieros

@@ -1,0 +1,18 @@
+Package: indicadores-financieros
+Title: What the Package Does (One Line, Title Case)
+Description: The job.
+Version: 0.0.1
+Authors@R: c(
+    person("Joshua", "Kunst", , "jbkunst@gmail.com", role = c("aut", "cre")),
+    person("Ignacio", "Rossi", , "ijrossi@uc.cl ", role = c("aut"))
+    )
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.1
+Imports:
+  flexdashboard,
+  tidyverse,
+  highcharter,
+  remotes
+Remotes: 
+  github::jbkunst/bcchr
