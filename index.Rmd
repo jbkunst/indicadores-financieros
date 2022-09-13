@@ -5,7 +5,7 @@ output:
     theme:
       primary: "#0c1c32"
       base_font:
-        google: Roboto
+        google: "IBM Plex Sans"
     orientation: rows
     vertical_layout: fill
 editor_options: 
@@ -23,26 +23,65 @@ options(
  bcc_api_pass = "cxynr4qyLLBw"
 )
 
+options(
+  highcharter.theme = hc_theme_smpl(
+    chart = list(
+      style = list(
+        fontFamily = "IBM Plex Sans",
+        color = "#666666"
+        )
+      )
+    )
+  )
 # dcatalogo <- bcchr::bcch_CatalogoSeries()
 
-get_chart <- function(timeseries = "F032.PIB.FLU.R.CLP.EP18.Z.Z.0.T",
+get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.CLP.EP18.Z.Z.0.T",
+                      firstdate  = lubridate::ymd("20000101"),
+                      subtitle   = NULL,
                       post_fun   = identity,
-                      # post_fun   = purrr::partial(bcchr::bcch_calculo_var_porc, tipo = "anio_anterior"),
-                      format     = NULL){
+                      format_num = identity
+                      )
+  {
   
-  data <- bcchr::bcch_GetSeries(timeseries)
+  data <- bcchr::bcch_GetSeries(timeseries, firstdate = firstdate)
   
   data <- post_fun(data)
   
+  data <- dplyr::filter(data, complete.cases(data))
+  
   ts <- as.ts(data)
   
-  name <- attr(data, "descripEsp")
-   
-  hc <- hchart(ts) |> 
-    hc_title(text = last(ts)) |> 
-    hc_subtitle(text = name)
+  data <- select(data, x = indexDateString, y = value)
+
+  title <- format_num(last(ts))
   
-  hc
+  if(is.null(subtitle)){
+    subtitle <- attr(data, "descripEsp")
+  }
+  
+  hchart(data, "line", hcaes(x, y)) |>
+    hc_title(
+      text = title, 
+      style = list(
+        fontFamily = "Changa One",
+        fontSize = "50px",
+        color = "#36454F"
+        # margin = 2
+        # "#888888"
+        # "#36454F"
+        )
+      ) |>
+    hc_subtitle(
+      text = subtitle,
+      style = list(
+        fontSize = "18px"
+        )
+      ) |>
+    hc_xAxis(title = list(text = "")) |>
+    hc_yAxis(title = list(text = "")) |>
+    hc_tooltip(valueDecimals = 2) |>
+    hc_rangeSelector(enabled = FALSE) |>
+    hc_navigator(enabled = FALSE)
   
 }
 
@@ -61,7 +100,7 @@ Row
 # F032.PIB.FLU.R.CLP.EP18.Z.Z.1.T - PIB volumen a precios del año anterior encadenado (desestacionalizado)
 get_chart(
   "F032.PIB.FLU.R.CLP.EP18.Z.Z.0.T", 
-  purrr::partial(bcchr::bcch_calculo_var_porc, tipo = "anio_anterior")
+  post_fun = purrr::partial(bcchr::bcch_calculo_var_porc, tipo = "anio_anterior")
   )
 ```
 
@@ -79,7 +118,10 @@ get_chart("F074.IPC.IND.Z.EP09.C.M")
 ```{r}
 # desempleo
 # F049.DES.TAS.INE9.10.M	- Tasa  de  desempleo  (porcentaje)
-get_chart("F049.DES.TAS.INE9.10.M")
+get_chart(
+  "F049.DES.TAS.INE9.10.M",
+  format_num = \(x) scales::percent(round(x, 2)/100, accuracy = 0.01)
+  )
 ```
 
 Row
@@ -96,7 +138,10 @@ Row
 ```{r}
 # TPM
 # F022.TPM.TIN.D001.NO.Z.D - Tasa de política monetaria (TPM) (porcentaje)
-get_chart("F022.TPM.TIN.D001.NO.Z.D")
+get_chart(
+  "F022.TPM.TIN.D001.NO.Z.D",
+  subtitle = "TPM Tasa de política monetaria"
+  )
 ```
 
 ###
@@ -104,7 +149,11 @@ get_chart("F022.TPM.TIN.D001.NO.Z.D")
 ```{r}
 # Dolar
 # F073.TCO.PRE.Z.D - Tipo  de  cambio  nominal (dólar observado $/USD)        
-get_chart("F073.TCO.PRE.Z.D")
+get_chart(
+  "F073.TCO.PRE.Z.D",
+   subtitle = "TCN Tipo cambio nominal (dólar observado)",
+  format_num = \(x) scales::comma(x, suffix = "$/USD", accuracy = 0.01)
+  )
 ```
 
 
