@@ -28,15 +28,6 @@ jobs:
         run: |
           remotes::install_github("jbkunst/bcchr")
 
-      # - name: Create and populate .Renviron file
-      #   env:
-      #     HOST: ${{ secrets.HOST }}
-      #     SHINY_PSQL_PWD: ${{ secrets.SHINY_PSQL_PWD }}
-      #   run: |
-      #     touch .Renviron
-      #     echo SHINY_PSQL_PWD="$SHINY_PSQL_PWD" >> .Renviron
-      #     echo HOST="$HOST" >> .Renviron
-
       - name: Update Dashboard
         shell: Rscript {0}
         run: |
