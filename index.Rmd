@@ -24,13 +24,51 @@ options(
 )
 
 options(
-  highcharter.theme = hc_theme_smpl(
+  highcharter.theme = hc_theme(
     chart = list(
+      zoomType = "x",
       style = list(
         fontFamily = "IBM Plex Sans",
         color = "#666666"
         )
-      )
+      ),
+    title = list(
+      style = list(
+        fontFamily = "Changa One",
+        fontSize = "50px",
+        color = "#36454F"
+        )
+      ),
+    subtitle = list(
+      style = list(
+        fontSize = "18px"
+        )
+      ),
+    tooltip = list(
+      valueDecimals = 2
+    ),
+    xAxis = list(
+      gridLineWidth = 1,
+      gridLineColor = "#F3F3F3",
+      startOnTick = FALSE,
+      endOnTick = FALSE,
+      lineWidth = 0,
+      tickWidth = 0
+      ),
+    yAxis = list(
+      gridLineWidth = 1,
+      gridLineColor = "#F3F3F3",
+      startOnTick = FALSE,
+      endOnTick = FALSE,
+      lineWidth = 0,
+      tickWidth = 0
+    ),
+     plotOptions = list(
+       series = list(
+         marker = list(enabled = FALSE)
+         )
+     ),
+    colors = list("#9b814d")
     )
   )
 # dcatalogo <- bcchr::bcch_CatalogoSeries()
@@ -60,26 +98,11 @@ get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.C
   }
   
   hchart(data, "line", hcaes(x, y)) |>
-    hc_title(
-      text = title, 
-      style = list(
-        fontFamily = "Changa One",
-        fontSize = "50px",
-        color = "#36454F"
-        # margin = 2
-        # "#888888"
-        # "#36454F"
-        )
-      ) |>
-    hc_subtitle(
-      text = subtitle,
-      style = list(
-        fontSize = "18px"
-        )
-      ) |>
+    hc_title(text = title) |>
+    hc_subtitle(text = subtitle) |>
     hc_xAxis(title = list(text = "")) |>
     hc_yAxis(title = list(text = "")) |>
-    hc_tooltip(valueDecimals = 2) |>
+    # hc_tooltip() |>
     hc_rangeSelector(enabled = FALSE) |>
     hc_navigator(enabled = FALSE)
   
