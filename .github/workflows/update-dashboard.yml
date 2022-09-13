@@ -23,6 +23,11 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
 
+      - name: Install bcchr
+        shell: Rscript {0}
+        run: |
+          remotes::install_github("jbkunst/bcchr")
+
       # - name: Create and populate .Renviron file
       #   env:
       #     HOST: ${{ secrets.HOST }}
