@@ -9,7 +9,7 @@ on:
 name: update-dashboard
 
 jobs:
-  updatedb:
+  update-dashboard:
     runs-on: ubuntu-latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
