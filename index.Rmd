@@ -103,10 +103,7 @@ get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.C
     hc_title(text = title) |>
     hc_subtitle(text = subtitle) |>
     hc_xAxis(title = list(text = "")) |>
-    hc_yAxis(title = list(text = "")) |>
-    # hc_tooltip() |>
-    hc_rangeSelector(enabled = FALSE) |>
-    hc_navigator(enabled = FALSE)
+    hc_yAxis(title = list(text = ""), opposite = TRUE) 
   
 }
 
@@ -123,9 +120,11 @@ Row
 # PIB
 # F032.PIB.FLU.R.CLP.EP18.Z.Z.0.T - PIB volumen a precios del año anterior encadenado
 # F032.PIB.FLU.R.CLP.EP18.Z.Z.1.T - PIB volumen a precios del año anterior encadenado (desestacionalizado)
+# https://si3.bcentral.cl/Siete/ES/Siete/Cuadro/CAP_CCNN/MN_CCNN76/CCNN2018_P0_V2/637801082315858005?cbFechaInicio=2013&cbFechaTermino=2022&cbFrecuencia=QUARTERLY&cbCalculo=YTYPCT&cbFechaBase=
 get_chart(
   "F032.PIB.FLU.R.CLP.EP18.Z.Z.0.T", 
-  post_fun = purrr::partial(bcchr::bcch_calculo_var_porc, tipo = "anio_anterior")
+  post_fun = \(x) mutate(bcchr::bcch_calculo_var_porc(x, tipo = "anio_anterior"), value = 100 * value),
+  format_num = \(x) scales::percent(x/100, accuracy = 0.01)
   )
 ```
 
@@ -135,7 +134,10 @@ get_chart(
 # IPC
 # F074.IPC.VAR.Z.Z.C.M -	IPC General histórico, variación mensual
 # F074.IPC.IND.Z.EP09.C.M	 - IPC General, variación anual
-get_chart("F074.IPC.IND.Z.EP09.C.M")
+get_chart(
+  "F074.IPC.IND.Z.EP09.C.M", 
+  format_num = \(x) scales::percent(x/100, accuracy = 0.01)
+  )
 ```
 
 ###
@@ -165,7 +167,8 @@ Row
 # F022.TPM.TIN.D001.NO.Z.D - Tasa de política monetaria (TPM) (porcentaje)
 get_chart(
   "F022.TPM.TIN.D001.NO.Z.D",
-  subtitle = "TPM Tasa de política monetaria"
+  subtitle = "TPM Tasa de política monetaria",
+  format_num = \(x) scales::percent(x/100, accuracy = 0.01)
   )
 ```
 
