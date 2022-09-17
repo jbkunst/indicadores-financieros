@@ -97,6 +97,7 @@ options(
 # dcatalogo |> glimpse() |> filter(stringr::str_detect(`Nombre de la serie`, "IMACEC")) |> View()
 get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.CLP.EP18.Z.Z.0.T",
                       firstdate  = lubridate::ymd("20000101"),
+                      lastdate   = Sys.Date(),
                       subtitle   = NULL,
                       post_fun   = identity,
                       format_num = identity,
@@ -104,7 +105,10 @@ get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.C
                       )
   {
   
-  data <- bcchr::bcch_GetSeries(timeseries, firstdate = firstdate)
+  # format_num = \(x) scales::percent(x/100, accuracy = 0.01)
+  # ... <- NULL
+  
+  data <- bcchr::bcch_GetSeries(timeseries, firstdate = firstdate, lastdate = lastdate)
   
   Sys.sleep(5)
   
@@ -121,6 +125,18 @@ get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.C
   if(is.null(subtitle)){
     subtitle <- attr(data, "descripEsp")
   }
+  
+  value1  <- as.numeric(tail(ts, 2)[2])
+  value2  <- as.numeric(tail(ts, 2)[1])
+  var_per <- value1/value2 - 1
+  arrow   <- ifelse(var_per > 0, "↗", "↘")
+  var_per <- abs(var_per)
+
+  subtitle <- stringr::str_glue(
+      stringr::str_c(subtitle, "<br/>var. {vm} ({arrow} {vp})"),
+      vm = format_num(value1 - value2),
+      vp = scales::percent(var_per, accuracy = 0.01)
+    )
   
   hchart(data, "line", hcaes(x, y), ...) |>
     hc_title(text = title) |>
@@ -217,18 +233,11 @@ get_chart(
 # F073.TCO.PRE.Z.D - Tipo  de  cambio  nominal (dólar observado $/USD)        
 get_chart(
   "F073.TCO.PRE.Z.D",
-  subtitle = "TCN, Tipo cambio nominal (dólar observado)",
-  name = "Dólar",
+  subtitle = "TCN, Tipo cambio nominal",
+  name = "Dólar observado",
   format_num = \(x) scales::comma(x, suffix = "$/USD", accuracy = 0.01)
   )
 ```
-
-### 
-
-### 
-
-Row
------------------------------------------------------------------------
 
 ###
 
@@ -250,10 +259,7 @@ get_chart(
   "F073.UTR.PRE.Z.M",
   subtitle = "UTM, Unidad tributaria mensual",
   name = "UTM",
-  format_num = \(x) scales::dollar(x, accuracy = 0.01)
+  format_num = \(x) scales::dollar(x, accuracy = 1),
+  tooltip = list(valueDecimals = 0)
   )
 ```
-
-### 
-
-### 
