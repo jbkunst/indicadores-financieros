@@ -1,10 +1,12 @@
 ---
-title: "Indicadores Financieros <small>`r format(Sys.time(), '%d %B, %Y')`</small>"
+title: "Indicadores Financieros"
+author: "`r Sys.setlocale('LC_TIME', 'Spanish');format(Sys.time(), '%d %B, %Y')`"
 output: 
   flexdashboard::flex_dashboard:
     # navbar:
     #   - { icon: "fa-calendar", align: right, title: "`r format(Sys.time(), '%d %B, %Y')`"}
     theme:
+      version: 5
       primary: "#0c1c32"
       base_font:
         google: "IBM Plex Sans"
@@ -13,6 +15,15 @@ output:
 editor_options: 
   chunk_output_type: console
 ---
+ 
+```{css}
+.navbar-author{ 
+  font-size: 0.80rem;
+  opacity: .6;
+}
+```
+
+
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
@@ -125,7 +136,7 @@ Row
 
 ###
 
-```{r IPB}
+```{r PIB}
 # PIB
 # F032.PIB.FLU.R.CLP.EP18.Z.Z.0.T - PIB volumen a precios del año anterior encadenado
 # F032.PIB.FLU.R.CLP.EP18.Z.Z.1.T - PIB volumen a precios del año anterior encadenado (desestacionalizado)
