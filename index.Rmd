@@ -111,7 +111,7 @@ get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.C
   
   data <- bcchr::bcch_GetSeries(timeseries, firstdate = firstdate, lastdate = lastdate)
   
-  Sys.sleep(5)
+  Sys.sleep(10)
   
   data <- post_fun(data)
   
