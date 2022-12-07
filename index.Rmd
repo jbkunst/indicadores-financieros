@@ -29,6 +29,7 @@ editor_options:
 library(flexdashboard)
 library(highcharter)
 library(dplyr)
+library(stringr)
 library(bcchr)
 
 options(
@@ -105,7 +106,10 @@ get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.C
                       )
   {
   
-  # format_num = \(x) scales::percent(x/100, accuracy = 0.01)
+  # timeseries <- "F032.PIB.FLU.R.CLP.EP18.Z.Z.0.T"
+  # subtitle   <- "PIB, Producto Interno Bruto respecto año anterior"
+  # post_fun   <- \(x) mutate(bcchr::bcch_calculo_var_porc(x, tipo = "anio_anterior"), value = 100 * value)
+  # format_num <- \(x) scales::percent(x/100, accuracy = 0.01)
   # ... <- NULL
   
   data <- bcchr::bcch_GetSeries(timeseries, firstdate = firstdate, lastdate = lastdate)
@@ -119,6 +123,21 @@ get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.C
   ts <- as.ts(data)
   
   data <- select(data, x = indexDateString, y = value)
+  
+  # export
+  file_name <- subtitle 
+  if(str_detect(file_name, ",")){
+    pos <- unique(as.numeric(str_locate(file_name, ",")))
+    file_name <- str_sub(file_name, 0, pos - 1)
+  } 
+  
+  file_name <- file_name |> 
+    str_replace_all("\\s+", "_") |> 
+    str_to_lower()
+  
+  data |> 
+    select(fecha = x, valor = y) |> 
+    readr::write_csv(stringr::str_glue("data/{ file_name }.csv"))
 
   title <- format_num(last(ts))
   
