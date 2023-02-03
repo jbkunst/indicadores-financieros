@@ -23,8 +23,6 @@ editor_options:
 }
 ```
 
-
-
 ```{r setup, include=FALSE}
 library(flexdashboard)
 library(highcharter)
