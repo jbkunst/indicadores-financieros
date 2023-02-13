@@ -114,7 +114,7 @@ get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.C
   
   Sys.sleep(20)
   
-  data <- post_fun(data)
+  # data <- post_fun(data)
   
   data <- dplyr::filter(data, complete.cases(data))
   
@@ -181,8 +181,6 @@ get_chart(
   post_fun = \(x) mutate(bcchr::bcch_calculo_var_porc(x, tipo = "anio_anterior"), value = 100 * value),
   format_num = \(x) scales::percent(x/100, accuracy = 0.01)
   )
-
-knitr::opts_chunk$set(eval = TRUE)
 ```
 
 ###
