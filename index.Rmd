@@ -187,7 +187,7 @@ get_chart(
   )
 
 # this option is to avoid run all reamining chunks
-knitr::opts_chunk$set(eval = FALSE)
+# knitr::opts_chunk$set(eval = FALSE)
 ```
 
 ###
