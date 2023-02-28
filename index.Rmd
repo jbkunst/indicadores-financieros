@@ -116,7 +116,7 @@ get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.C
   
   Sys.sleep(20)
   
-  # data <- post_fun(data)
+  data <- post_fun(data)
   
   data <- dplyr::filter(data, complete.cases(data))
   
