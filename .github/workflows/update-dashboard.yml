@@ -23,7 +23,6 @@ jobs:
       - name: Update Dashboard
         shell: Rscript {0}
         run: |
-          remotes::install_github("jbkunst/bcchr")
           Sys.setlocale('LC_TIME', 'Spanish')
           rmarkdown::render("index.Rmd")
 
