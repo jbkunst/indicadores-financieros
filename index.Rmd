@@ -105,6 +105,8 @@ get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.C
   {
   
   # timeseries <- "F032.PIB.FLU.R.CLP.EP18.Z.Z.0.T"
+  # firstdate <-  lubridate::ymd("20000101")
+  # lastdate <- Sys.Date()
   # subtitle   <- "PIB, Producto Interno Bruto respecto año anterior"
   # post_fun   <- \(x) mutate(bcchr::bcch_calculo_var_porc(x, tipo = "anio_anterior"), value = 100 * value)
   # format_num <- \(x) scales::percent(x/100, accuracy = 0.01)
@@ -118,12 +120,14 @@ get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.C
   
   data <- dplyr::filter(data, complete.cases(data))
   
-  ts <- as.ts(data)
-  
   data <- select(data, x = indexDateString, y = value)
+  
+  # ts <- as.ts(data)
+  ts <-  as.ts(pull(data, y))
   
   # export
   file_name <- subtitle 
+  
   if(str_detect(file_name, ",")){
     pos <- unique(as.numeric(str_locate(file_name, ",")))
     file_name <- str_sub(file_name, 0, pos - 1)
@@ -181,6 +185,9 @@ get_chart(
   post_fun = \(x) mutate(bcchr::bcch_calculo_var_porc(x, tipo = "anio_anterior"), value = 100 * value),
   format_num = \(x) scales::percent(x/100, accuracy = 0.01)
   )
+
+# this option is to avoid run all reamining chunks
+knitr::opts_chunk$set(eval = FALSE)
 ```
 
 ###
