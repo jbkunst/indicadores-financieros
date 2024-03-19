@@ -19,7 +19,7 @@ editor_options:
 ```{css}
 .navbar-author{ 
   font-size: 0.80rem;
-  opacity: .6;
+  opacity: .60;
 }
 ```
 
