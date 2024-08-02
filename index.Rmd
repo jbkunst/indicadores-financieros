@@ -27,15 +27,43 @@ editor_options:
 library(flexdashboard)
 library(highcharter)
 library(dplyr)
+library(purrr)
 library(stringr)
 library(bcchr)
 
-options(
- bcc_api_user = 178956728,
- bcc_api_pass = "cxynr4qyLLBw"
-)
+dollar  <- partial(scales::dollar,  big.mark = ".", decimal.mark = ",")
+comma   <- partial(scales::comma,   big.mark = ".", decimal.mark = ",")
+percent <- partial(scales::percent, big.mark = ".", decimal.mark = ",")
+
+newlang_opts <- getOption("highcharter.lang")
+newlang_opts$weekdays     <- c("domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado")
+newlang_opts$months       <- c("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
+                               "agosto", "septiembre", "octubre", "noviembre", "diciembre")
+newlang_opts$shortMonths  <- c("ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep",
+                               "oct", "nov", "dic")
+newlang_opts$drillUpText  <- "◁ Volver a {series.name}"
+newlang_opts$loading      <- "<i class='fas fa-circle-notch fa-spin fa-4x'></i>"
+# newlang_opts$loading      <- "Cargando información"
+
+newlang_opts$downloadCSV  <- "Descargar CSV"
+newlang_opts$downloadJPEG <- "Descargar JPEG"
+newlang_opts$downloadPDF  <- "Descargar PDF"
+newlang_opts$downloadPNG  <- "Descargar PNG"
+newlang_opts$downloadSVG  <- "Descargar SVG"
+newlang_opts$downloadXLS  <- "Descargar Excel"
+newlang_opts$printChart   <- "Imprimir gráfico"
+newlang_opts$viewFullscreen <- "Ver pantalla completa"
+newlang_opts$resetZoom    <- "Resetear zoom"
+newlang_opts$thousandsSep <- "."
+newlang_opts$decimalPoint <- ","
+
+newlang_opts$contextButtonTitle <- "Menú contextual del gráfico"
+newlang_opts$numericSymbols <- JS("null")
 
 options(
+  bcc_api_user = 178956728,
+  bcc_api_pass = "cxynr4qyLLBw",
+  highcharter.lang = newlang_opts,
   highcharter.theme = hc_theme(
     chart = list(
       zoomType = "x",
@@ -109,7 +137,7 @@ get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.C
   # lastdate <- Sys.Date()
   # subtitle   <- "PIB, Producto Interno Bruto respecto año anterior"
   # post_fun   <- \(x) mutate(bcchr::bcch_calculo_var_porc(x, tipo = "anio_anterior"), value = 100 * value)
-  # format_num <- \(x) scales::percent(x/100, accuracy = 0.01)
+  # format_num <- \(x) percent(x/100, accuracy = 0.01)
   # ... <- NULL
   
   data <- bcchr::bcch_GetSeries(timeseries, firstdate = firstdate, lastdate = lastdate)
@@ -156,7 +184,7 @@ get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.C
   subtitle <- stringr::str_glue(
       stringr::str_c(subtitle, "<br/>var. {vm} ({arrow} {vp})"),
       vm = format_num(value1 - value2),
-      vp = scales::percent(var_per, accuracy = 0.01)
+      vp = percent(var_per, accuracy = 0.01)
     )
   
   hchart(data, "line", hcaes(x, y), ...) |>
@@ -183,7 +211,7 @@ get_chart(
   subtitle = "PIB, Producto Interno Bruto respecto año anterior",
   name = "PIB",
   post_fun = \(x) mutate(bcchr::bcch_calculo_var_porc(x, tipo = "anio_anterior"), value = 100 * value),
-  format_num = \(x) scales::percent(x/100, accuracy = 0.01)
+  format_num = \(x) percent(x/100, accuracy = 0.01)
   )
 
 # this option is to avoid run all reamining chunks
@@ -200,7 +228,7 @@ get_chart(
   "F074.IPC.IND.Z.EP09.C.M", 
   subtitle = "IPC, Índice Precios al Consumidor, variación anual",
   name = "IPC",
-  format_num = \(x) scales::percent(x/100, accuracy = 0.01)
+  format_num = \(x) percent(x/100, accuracy = 0.01)
   )
 ```
 
@@ -213,7 +241,7 @@ get_chart(
   "F049.DES.TAS.INE9.10.M",
   subtitle = "Tasa  de  desempleo",
   name = "Desempleo (%)",
-  format_num = \(x) scales::percent(round(x, 2)/100, accuracy = 0.01)
+  format_num = \(x) percent(round(x, 2)/100, accuracy = 0.01)
   )
 ```
 
@@ -227,7 +255,7 @@ get_chart(
   subtitle = "IMACEC, Indicador mensual de actividad económica",
   name = "IMACEC",
   post_fun = \(x) mutate(bcchr::bcch_calculo_var_porc(x, tipo = "anio_anterior"), value = 100 * value),
-  format_num = \(x) scales::percent(round(x, 2)/100, accuracy = 0.01)
+  format_num = \(x) percent(round(x, 2)/100, accuracy = 0.01)
 )
 ```
 
@@ -244,7 +272,7 @@ get_chart(
   "F022.TPM.TIN.D001.NO.Z.D",
   subtitle = "TPM, Tasa de política monetaria",
   name = "TMP",
-  format_num = \(x) scales::percent(x/100, accuracy = 0.01)
+  format_num = \(x) percent(x/100, accuracy = 0.01)
   )
 ```
 
@@ -257,7 +285,7 @@ get_chart(
   "F073.TCO.PRE.Z.D",
   subtitle = "TCN, Tipo cambio nominal",
   name = "Dólar observado",
-  format_num = \(x) scales::comma(x, suffix = "$/USD", accuracy = 0.01)
+  format_num = \(x) comma(x, suffix = "$/USD", accuracy = 0.01)
   )
 ```
 
@@ -269,7 +297,7 @@ get_chart(
   "F073.UFF.PRE.Z.D",
   subtitle = "UF, Unidad de Fomento",
   name = "UF",
-  format_num = \(x) scales::dollar(x, accuracy = 0.01)
+  format_num = \(x) dollar(x, accuracy = 0.01)
   )
 ```
 
@@ -281,7 +309,7 @@ get_chart(
   "F073.UTR.PRE.Z.M",
   subtitle = "UTM, Unidad tributaria mensual",
   name = "UTM",
-  format_num = \(x) scales::dollar(x, accuracy = 1),
+  format_num = \(x) dollar(x, accuracy = 1),
   tooltip = list(valueDecimals = 0)
   )
 ```
