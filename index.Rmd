@@ -1,6 +1,6 @@
 ---
 title: "Indicadores Financieros"
-author: "`r Sys.setlocale('LC_TIME', 'Spanish');format(Sys.time(), '%d %B, %Y')`"
+author: "`r (function(){Sys.setlocale('LC_TIME', 'Spanish');format(Sys.time(), '%d %B, %Y')})()`"
 output: 
   flexdashboard::flex_dashboard:
     # navbar:
