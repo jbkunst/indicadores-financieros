@@ -7,7 +7,7 @@ output:
     #   - { icon: "fa-calendar", align: right, title: "`r format(Sys.time(), '%d %B, %Y')`"}
     theme:
       version: 4
-      primary: "#0c1c32"
+      primary: "#57199a"
       base_font:
         google: "IBM Plex Sans"
     orientation: rows
@@ -109,7 +109,7 @@ options(
          states = list(hover = list(lineWidthPlus = 0))
          )
      ),
-    colors = list("#9b814d")
+    colors = list("#57199a")
     )
   )
 
