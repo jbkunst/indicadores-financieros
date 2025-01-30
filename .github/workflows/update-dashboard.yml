@@ -20,6 +20,11 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
 
+      - name: Instal bcchr
+        shell: Rscript {0}
+        run: |
+          pak::pkg_install("jbkunst/bcchr")
+
       - name: Update Dashboard
         shell: Rscript {0}
         run: |
