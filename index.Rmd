@@ -3,8 +3,6 @@ title: "Indicadores Financieros"
 author: "`r (function(){Sys.setlocale('LC_TIME', 'Spanish');format(Sys.time(), '%d %B, %Y')})()`"
 output: 
   flexdashboard::flex_dashboard:
-    # navbar:
-    #   - { icon: "fa-calendar", align: right, title: "`r format(Sys.time(), '%d %B, %Y')`"}
     theme:
       version: 4
       primary: "#0c1c32"
@@ -54,6 +52,7 @@ newlang_opts$downloadXLS  <- "Descargar Excel"
 newlang_opts$printChart   <- "Imprimir gráfico"
 newlang_opts$viewFullscreen <- "Ver pantalla completa"
 newlang_opts$resetZoom    <- "Resetear zoom"
+newlang_opts$rangeSelectorZoom <- ""
 newlang_opts$thousandsSep <- "."
 newlang_opts$decimalPoint <- ","
 
@@ -103,19 +102,72 @@ options(
       lineWidth = 0,
       tickWidth = 0
     ),
-     plotOptions = list(
-       series = list(
-         marker = list(enabled = FALSE),
-         states = list(hover = list(lineWidthPlus = 0))
-         )
-     ),
-    colors = list("#9b814d")
+    exporting = list(enabled = FALSE),
+    plotOptions = list(
+      series = list(
+        connectNulls = TRUE,
+        marker = list(enabled = FALSE),
+        states = list(hover = list(lineWidthPlus = 0))
+        )
+    ),
+    colors = list("#0c1c32")
     )
   )
+
+dashboard_lastdate <- Sys.Date()
+dashboard_history_years <- 5
+dashboard_download_years <- dashboard_history_years + 1
+dashboard_zoom_years <- 1
+dashboard_request_sleep <- 10
+
+dashboard_history_firstdate <- dashboard_lastdate - lubridate::years(dashboard_history_years)
+dashboard_download_firstdate <- dashboard_lastdate - lubridate::years(dashboard_download_years)
+dashboard_zoom_firstdate <- dashboard_lastdate - lubridate::years(dashboard_zoom_years)
+
+date_to_timestamp <- function(x) {
+  highcharter::datetime_to_timestamp(as.Date(x))
+}
 
 
 # Install thematic and un-comment for themed static plots (i.e., ggplot2)
 # thematic::thematic_rmd()
+```
+
+```{js}
+window.syncDashboardExtremes = function (event) {
+  if (!event || event.trigger === 'syncDashboard' || window.dashboardSyncing) {
+    return;
+  }
+
+  if (typeof event.min !== 'number' || typeof event.max !== 'number') {
+    return;
+  }
+
+  var sourceAxis = event.target;
+  if (!sourceAxis || !sourceAxis.chart || !window.Highcharts) {
+    return;
+  }
+
+  window.dashboardSyncing = true;
+
+  try {
+    Highcharts.charts.forEach(function (chart) {
+      if (!chart || chart === sourceAxis.chart || !chart.xAxis || !chart.xAxis[0]) {
+        return;
+      }
+
+      chart.xAxis[0].setExtremes(
+        event.min,
+        event.max,
+        true,
+        false,
+        { trigger: 'syncDashboard' }
+      );
+    });
+  } finally {
+    window.dashboardSyncing = false;
+  }
+};
 ```
 
 ```{r helpers}
@@ -123,11 +175,15 @@ options(
 # dcatalogo |> glimpse() |> filter(stringr::str_detect(`Nombre cuadro`, "IMACEC")) |> View()
 # dcatalogo |> glimpse() |> filter(stringr::str_detect(`Nombre de la serie`, "IMACEC")) |> View()
 get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.CLP.EP18.Z.Z.0.T",
-                      firstdate  = lubridate::ymd("20000101"),
-                      lastdate   = Sys.Date(),
-                      subtitle   = NULL,
-                      post_fun   = identity,
-                      format_num = identity,
+                      firstdate         = dashboard_download_firstdate,
+                      lastdate          = dashboard_lastdate,
+                      history_firstdate = dashboard_history_firstdate,
+                      zoom_firstdate    = dashboard_zoom_firstdate,
+                      subtitle          = NULL,
+                      post_fun          = identity,
+                      format_num        = identity,
+                      enable_navigator  = TRUE,
+                      enable_navigator_buttons = TRUE,
                       ...
                       )
   {
@@ -141,44 +197,42 @@ get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.C
   # ... <- NULL
   
   data <- bcchr::bcch_GetSeries(timeseries, firstdate = firstdate, lastdate = lastdate)
+  data_description <- attr(data, "descripEsp")
   
-  Sys.sleep(20)
+  Sys.sleep(dashboard_request_sleep)
   
   data <- post_fun(data)
   
-  data <- dplyr::filter(data, complete.cases(data))
+  data <- data |>
+    dplyr::filter(!is.na(indexDateString), !is.na(value)) |>
+    dplyr::transmute(
+      x = lubridate::ymd(indexDateString),
+      y = value
+    ) |>
+    dplyr::filter(x >= history_firstdate, x <= lastdate) |>
+    dplyr::arrange(x) |>
+    dplyr::group_by(x) |>
+    dplyr::summarise(y = dplyr::last(y), .groups = "drop")
   
-  data <- select(data, x = indexDateString, y = value)
+  date_index <- tibble::tibble(
+    x = seq.Date(as.Date(history_firstdate), as.Date(lastdate), by = "day")
+  )
   
-  # ts <- as.ts(data)
-  ts <-  as.ts(pull(data, y))
-  
-  # export
-  file_name <- subtitle 
-  
-  if(str_detect(file_name, ",")){
-    pos <- unique(as.numeric(str_locate(file_name, ",")))
-    file_name <- str_sub(file_name, 0, pos - 1)
-  } 
-  
-  file_name <- file_name |> 
-    str_replace_all("\\s+", "_") |> 
-    str_to_lower()
-  
-  data |> 
-    select(fecha = x, valor = y) |> 
-    readr::write_csv(stringr::str_glue("data/{ file_name }.csv"))
+  chart_data <- dplyr::left_join(date_index, data, by = "x")
+  data_values <- dplyr::filter(chart_data, !is.na(y))
 
-  title <- format_num(last(ts))
+  title <- format_num(dplyr::last(data_values$y))
+  last_data_date <- max(data_values$x)
   
   if(is.null(subtitle)){
-    subtitle <- attr(data, "descripEsp")
+    subtitle <- data_description
   }
   
-  value1  <- as.numeric(tail(ts, 2)[2])
-  value2  <- as.numeric(tail(ts, 2)[1])
+  last_values <- tail(data_values$y, 2)
+  value1 <- as.numeric(last_values[length(last_values)])
+  value2 <- as.numeric(last_values[length(last_values) - 1])
   var_per <- value1/value2 - 1
-  arrow   <- ifelse(var_per > 0, "↗", "↘")
+  arrow <- ifelse(var_per > 0, "&#8599;", "&#8600;")
   var_per <- abs(var_per)
 
   subtitle <- stringr::str_glue(
@@ -187,11 +241,87 @@ get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.C
       vp = percent(var_per)
     )
   
-  hchart(data, "line", hcaes(x, y), ...) |>
+  range_selector_options <- if(enable_navigator_buttons) {
+    list(
+      enabled = TRUE,
+      selected = 1,
+      inputEnabled = FALSE,
+      buttonTheme = list(
+        fill = "transparent",
+        stroke = "#d8dee7",
+        `stroke-width` = 1,
+        r = 2,
+        style = list(color = "#666666", fontWeight = "400"),
+        states = list(
+          hover = list(
+            fill = "#0c1c32",
+            style = list(color = "#ffffff")
+          ),
+          select = list(
+            fill = "#0c1c32",
+            style = list(color = "#ffffff")
+          )
+        )
+      ),
+      buttons = list(
+        list(type = "ytd", text = "YTD"),
+        list(type = "year", count = 1, text = "1a"),
+        list(type = "year", count = 5, text = "5a")
+      )
+    )
+  } else {
+    list(enabled = FALSE)
+  }
+  
+  navigator_options <- list(
+    enabled = enable_navigator,
+    liveRedraw = TRUE,
+    height = 24,
+    margin = 2,
+    maskFill = "rgba(12, 28, 50, 0.12)",
+    outlineColor = "#d8dee7",
+    handles = list(
+      backgroundColor = "#ffffff",
+      borderColor = "#0c1c32"
+    ),
+    xAxis = list(
+      labels = list(enabled = FALSE),
+      tickLength = 0,
+      lineWidth = 0
+    ),
+    series = list(
+      type = "line",
+      color = "#0c1c32",
+      lineWidth = 1
+    )
+  )
+  
+  hc <- hchart(chart_data, "line", hcaes(x, y), ...) |>
     hc_title(text = title) |>
     hc_subtitle(text = subtitle) |>
-    hc_xAxis(title = list(text = "")) |>
-    hc_yAxis(title = list(text = ""), opposite = TRUE) 
+    hc_xAxis(
+      type = "datetime",
+      title = list(text = ""),
+      min = date_to_timestamp(zoom_firstdate),
+      max = date_to_timestamp(lastdate),
+      ordinal = FALSE,
+      events = list(
+        afterSetExtremes = JS("function (event) { window.syncDashboardExtremes(event); }")
+      )
+    ) |>
+    hc_yAxis(title = list(text = ""), opposite = TRUE)
+  
+  hc <- do.call(hc_rangeSelector, c(list(hc), range_selector_options))
+  hc <- do.call(hc_navigator, c(list(hc), navigator_options))
+  
+  hc |>
+    hc_caption(
+      text = stringr::str_glue("ultimo dato: {format(last_data_date, '%d-%m-%Y')}"),
+      align = "left",
+      style = list(color = "#8c8c8c", fontSize = "10px")
+    ) |>
+    hc_scrollbar(enabled = FALSE) |>
+    hc_exporting(enabled = FALSE)
   
 }
 ```
@@ -271,7 +401,7 @@ Row
 get_chart(
   "F022.TPM.TIN.D001.NO.Z.D",
   subtitle = "TPM, Tasa de política monetaria",
-  name = "TMP",
+  name = "TPM",
   format_num = \(x) percent(x/100)
   )
 ```
