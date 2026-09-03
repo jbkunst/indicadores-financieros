@@ -29,6 +29,10 @@ library(purrr)
 library(stringr)
 library(bcchr)
 
+if (!nzchar(Sys.getenv("BCCH_TOKEN"))) {
+  stop("Falta BCCH_TOKEN. Configúralo en .Renviron o como secreto de GitHub Actions.")
+}
+
 dollar  <- partial(scales::dollar,  big.mark = ".", decimal.mark = ",")
 comma   <- partial(scales::comma,   big.mark = ".", decimal.mark = ",")
 percent <- partial(scales::percent, big.mark = ".", decimal.mark = ",", accuracy = 0.01)
@@ -60,8 +64,6 @@ newlang_opts$contextButtonTitle <- "Menú contextual del gráfico"
 newlang_opts$numericSymbols <- JS("null")
 
 options(
-  bcc_api_user = 178956728,
-  bcc_api_pass = "cxynr4qyLLBw",
   highcharter.lang = newlang_opts,
   highcharter.theme = hc_theme(
     chart = list(
@@ -128,6 +130,12 @@ date_to_timestamp <- function(x) {
   highcharter::datetime_to_timestamp(as.Date(x))
 }
 
+annual_change <- function(data, periods) {
+  data |>
+    dplyr::arrange(date) |>
+    dplyr::mutate(value = 100 * (value / dplyr::lag(value, n = periods) - 1))
+}
+
 
 # Install thematic and un-comment for themed static plots (i.e., ggplot2)
 # thematic::thematic_rmd()
@@ -171,9 +179,8 @@ window.syncDashboardExtremes = function (event) {
 ```
 
 ```{r helpers}
-# dcatalogo <- bcchr::bcch_CatalogoSeries()
-# dcatalogo |> glimpse() |> filter(stringr::str_detect(`Nombre cuadro`, "IMACEC")) |> View()
-# dcatalogo |> glimpse() |> filter(stringr::str_detect(`Nombre de la serie`, "IMACEC")) |> View()
+# dcatalogo <- bcchr::metadata()
+# dcatalogo |> dplyr::filter(stringr::str_detect(spanish_title, "IMACEC")) |> View()
 get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.CLP.EP18.Z.Z.0.T",
                       firstdate         = dashboard_download_firstdate,
                       lastdate          = dashboard_lastdate,
@@ -192,21 +199,20 @@ get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.C
   # firstdate <-  lubridate::ymd("20000101")
   # lastdate <- Sys.Date()
   # subtitle   <- "PIB, Producto Interno Bruto respecto año anterior"
-  # post_fun   <- \(x) mutate(bcchr::bcch_calculo_var_porc(x, tipo = "anio_anterior"), value = 100 * value)
+  # post_fun   <- \(x) annual_change(x, periods = 4)
   # format_num <- \(x) percent(x/100, accuracy = 0.01)
   # ... <- NULL
   
-  data <- bcchr::bcch_GetSeries(timeseries, firstdate = firstdate, lastdate = lastdate)
-  data_description <- attr(data, "descripEsp")
+  data <- bcchr::get_series(timeseries, from = firstdate, to = lastdate)
   
   Sys.sleep(dashboard_request_sleep)
   
   data <- post_fun(data)
   
   data <- data |>
-    dplyr::filter(!is.na(indexDateString), !is.na(value)) |>
+    dplyr::filter(!is.na(date), !is.na(value)) |>
     dplyr::transmute(
-      x = lubridate::ymd(indexDateString),
+      x = as.Date(date),
       y = value
     ) |>
     dplyr::filter(x >= history_firstdate, x <= lastdate) |>
@@ -224,8 +230,8 @@ get_chart <- function(timeseries = "F049.DES.TAS.INE9.10.M", # "F032.PIB.FLU.R.C
   title <- format_num(dplyr::last(data_values$y))
   last_data_date <- max(data_values$x)
   
-  if(is.null(subtitle)){
-    subtitle <- data_description
+  if (is.null(subtitle)) {
+    subtitle <- bcchr::describe_series(timeseries, verbose = FALSE)$spanish_title[[1]]
   }
   
   last_values <- tail(data_values$y, 2)
@@ -340,7 +346,7 @@ get_chart(
   "F032.PIB.FLU.R.CLP.EP18.Z.Z.0.T", 
   subtitle = "PIB, Producto Interno Bruto respecto año anterior",
   name = "PIB",
-  post_fun = \(x) mutate(bcchr::bcch_calculo_var_porc(x, tipo = "anio_anterior"), value = 100 * value),
+  post_fun = \(x) annual_change(x, periods = 4),
   format_num = \(x) percent(x/100)
   )
 
@@ -384,7 +390,7 @@ get_chart(
   "F032.IMC.IND.Z.Z.EP18.Z.Z.0.M",
   subtitle = "IMACEC, Indicador mensual de actividad económica",
   name = "IMACEC",
-  post_fun = \(x) mutate(bcchr::bcch_calculo_var_porc(x, tipo = "anio_anterior"), value = 100 * value),
+  post_fun = \(x) annual_change(x, periods = 12),
   format_num = \(x) percent(round(x, 2)/100)
 )
 ```
