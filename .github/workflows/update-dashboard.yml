@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      BCCH_TOKEN: ${{ secrets.BCCH_TOKEN }}
       LANG: es_ES.UTF-8
       LC_TIME: es_ES.UTF-8
 
