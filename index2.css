@@ -1,0 +1,199 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600;700&family=Newsreader:wght@400;500;600;700&display=swap');
+
+:root {
+  --studio-blue: #003B5C;
+  --studio-gold: #C6A15B;
+  --studio-gold-wash: #F1EEE8;
+  --studio-ink: #17242D;
+  --studio-muted: #53636D;
+  --studio-paper: #F6F7F8;
+  --studio-border: #D8DEE7;
+  --studio-editorial-font: "Newsreader", Georgia, serif;
+  --studio-heading-font: "IBM Plex Serif", Georgia, serif;
+  --studio-technical-font: "IBM Plex Sans", "Segoe UI", sans-serif;
+}
+
+body {
+  color: var(--studio-ink);
+  background: var(--studio-paper);
+  font-family: var(--studio-editorial-font);
+}
+
+.navbar {
+  background: var(--studio-blue) !important;
+  font-family: var(--studio-technical-font);
+}
+
+.navbar-brand {
+  font-family: var(--studio-heading-font) !important;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.dashboard-page {
+  background: var(--studio-paper);
+}
+
+.studio-hero {
+  padding: 1.7rem 1.8rem 1.2rem;
+}
+
+.studio-eyebrow {
+  margin: 0 0 0.25rem;
+  color: var(--studio-gold);
+  font-family: var(--studio-technical-font);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.studio-hero h1 {
+  margin: 0;
+  color: var(--studio-ink);
+  font-family: var(--studio-heading-font);
+  font-size: clamp(1.8rem, 3vw, 2.65rem);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+
+.studio-hero p {
+  max-width: 47rem;
+  margin: 0.45rem 0 0;
+  color: var(--studio-muted);
+  font-size: 1.08rem;
+  line-height: 1.45;
+}
+
+.indicator-strip {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  overflow-x: auto;
+  margin: 0 1.8rem 1rem;
+  border-top: 1px solid rgba(198, 161, 91, 0.55);
+  border-bottom: 1px solid var(--studio-border);
+  font-family: var(--studio-technical-font);
+  scrollbar-width: none;
+}
+
+.indicator-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.indicator-item {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: baseline;
+  gap: 0.55rem;
+  padding: 0.65rem 1.3rem 0.65rem 0;
+  white-space: nowrap;
+}
+
+.indicator-label {
+  color: var(--studio-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.indicator-value {
+  color: var(--studio-blue);
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.indicator-period {
+  color: #7C8B94;
+  font-size: 0.72rem;
+}
+
+.indicator-change {
+  color: var(--studio-muted);
+  font-size: 0.72rem;
+}
+
+.card {
+  border: 1px solid var(--studio-border);
+  border-radius: 7px;
+  background: #FFFFFF;
+  box-shadow: none;
+}
+
+.card-header {
+  padding: 0.9rem 1rem 0.55rem;
+  border-bottom: 0;
+  color: var(--studio-ink);
+  background: transparent;
+  font-family: var(--studio-heading-font);
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.imacec-summary {
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.8fr) minmax(16rem, 2fr);
+  gap: 2rem;
+  align-items: end;
+  padding: 0.3rem 0.25rem 1.1rem;
+}
+
+.imacec-number {
+  color: var(--studio-blue);
+  font-family: var(--studio-heading-font);
+  font-size: clamp(3.8rem, 8vw, 6.8rem);
+  font-weight: 400;
+  line-height: 0.88;
+  letter-spacing: -0.055em;
+  font-variant-numeric: tabular-nums;
+}
+
+.imacec-meta {
+  padding-bottom: 0.35rem;
+  color: var(--studio-muted);
+  font-family: var(--studio-technical-font);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.imacec-meta strong {
+  color: var(--studio-ink);
+  font-weight: 600;
+}
+
+.imacec-note {
+  margin: 0;
+  color: var(--studio-muted);
+  font-size: 1rem;
+}
+
+.chart-source {
+  margin-top: 0.35rem;
+  color: #7C8B94;
+  font-family: var(--studio-technical-font);
+  font-size: 0.7rem;
+}
+
+.highcharts-container,
+.highcharts-root,
+.highcharts-axis-labels,
+.highcharts-tooltip {
+  font-family: var(--studio-technical-font) !important;
+}
+
+@media (max-width: 700px) {
+  .studio-hero {
+    padding-inline: 1rem;
+  }
+
+  .indicator-strip {
+    margin-inline: 1rem;
+  }
+
+  .imacec-summary {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+}
