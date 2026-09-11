@@ -1,0 +1,144 @@
+---
+title: "Indicadores Financieros"
+format:
+  dashboard:
+    scrolling: true
+    theme: default
+    css: index2.css
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+library(highcharter)
+library(dplyr)
+library(bcchr)
+
+if (!nzchar(Sys.getenv("BCCH_TOKEN"))) {
+  stop("Falta BCCH_TOKEN. Configúralo en .Renviron o como secreto de GitHub Actions.")
+}
+
+series_id <- "F032.IMC.IND.Z.Z.EP18.Z.Z.0.M"
+
+imacec_raw <- bcchr::get_series(
+  series_id,
+  from = Sys.Date() - lubridate::years(6),
+  to = Sys.Date()
+)
+
+imacec <- imacec_raw |>
+  arrange(date) |>
+  mutate(value = 100 * (value / lag(value, 12) - 1)) |>
+  filter(!is.na(value))
+
+latest <- imacec |> slice_tail(n = 1)
+previous <- imacec |> slice_tail(n = 2) |> slice_head(n = 1)
+
+latest_value <- latest$value[[1]]
+previous_value <- previous$value[[1]]
+latest_date <- latest$date[[1]]
+monthly_delta <- latest_value - previous_value
+
+display_value <- scales::percent(latest_value / 100, accuracy = 0.1, decimal.mark = ",")
+display_delta <- paste0(ifelse(monthly_delta >= 0, "+", ""),
+                        scales::number(monthly_delta, accuracy = 0.1, decimal.mark = ","),
+                        " pp")
+display_period <- format(as.Date(latest_date), "%b %Y")
+
+hc <- highcharter::hchart(
+  imacec,
+  "line",
+  highcharter::hcaes(x = date, y = value),
+  name = "IMACEC"
+) |>
+  highcharter::hc_chart(
+    backgroundColor = "transparent",
+    zoomType = "x",
+    spacing = c(10, 10, 5, 10)
+  ) |>
+  highcharter::hc_colors("#003B5C") |>
+  highcharter::hc_title(text = NULL) |>
+  highcharter::hc_subtitle(text = NULL) |>
+  highcharter::hc_xAxis(
+    type = "datetime",
+    lineWidth = 0,
+    tickWidth = 0,
+    gridLineWidth = 0,
+    labels = list(style = list(color = "#53636D", fontSize = "11px"))
+  ) |>
+  highcharter::hc_yAxis(
+    title = list(text = NULL),
+    gridLineColor = "#E7EBEE",
+    labels = list(
+      format = "{value}%",
+      style = list(color = "#53636D", fontSize = "11px")
+    ),
+    plotLines = list(list(
+      value = 0,
+      color = "#C6A15B",
+      width = 1,
+      zIndex = 2
+    ))
+  ) |>
+  highcharter::hc_plotOptions(
+    series = list(
+      lineWidth = 2,
+      marker = list(enabled = FALSE),
+      states = list(hover = list(lineWidthPlus = 0))
+    )
+  ) |>
+  highcharter::hc_tooltip(
+    shared = TRUE,
+    valueDecimals = 1,
+    valueSuffix = "%",
+    xDateFormat = "%B %Y"
+  ) |>
+  highcharter::hc_legend(enabled = FALSE) |>
+  highcharter::hc_exporting(enabled = FALSE)
+```
+
+<div class="studio-hero">
+  <p class="studio-eyebrow">Chile · panorama económico</p>
+  <h1>Actividad económica</h1>
+  <p>Una primera vista del pulso de la economía chilena a partir del IMACEC.</p>
+</div>
+
+<div class="indicator-strip" aria-label="Últimos indicadores">
+  <div class="indicator-item">
+    <span class="indicator-label">IMACEC</span>
+    <span class="indicator-value">`r display_value`</span>
+    <span class="indicator-period">`r display_period`</span>
+    <span class="indicator-change">`r display_delta` vs. dato anterior</span>
+  </div>
+</div>
+
+## Row {height=190}
+
+::: {.card}
+
+<div class="imacec-summary">
+  <div class="imacec-number">`r display_value`</div>
+  <div class="imacec-meta">
+    <div><strong>IMACEC</strong> · variación interanual</div>
+    <div>Último dato: `r format(as.Date(latest_date), "%d-%m-%Y")`</div>
+    <div>Cambio respecto del dato anterior: `r display_delta`</div>
+  </div>
+</div>
+
+<p class="imacec-note">El IMACEC resume mensualmente la evolución de la actividad económica. En esta versión inicial mostramos solamente el dato observado y su trayectoria reciente.</p>
+
+:::
+
+## Row {height=520}
+
+::: {.card title="IMACEC · variación interanual"}
+
+```{r}
+hc
+```
+
+<p class="chart-source">Fuente: Banco Central de Chile · serie `r series_id`.</p>
+
+:::
